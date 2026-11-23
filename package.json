@@ -1,0 +1,21 @@
+{
+  "name": "esm-famil",
+  "version": "1.0.0",
+  "description": "Esm Famil / Stadt, Land, Fluss – Echtzeit-Multiplayer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/sim.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.3.0",
+    "socket.io": "^4.8.4"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.4"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

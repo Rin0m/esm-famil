@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Esm Famil</title>
+<meta name="theme-color" content="#1f2a4d">
+<style>
+  @font-face { font-family: Vazirmatn; src: url(fonts/Vazirmatn-Bold.ttf); font-weight: 100 900; }
+  /* Farben kommen aus dem gewählten Teppich-Design (siehe THEMES im Skript) */
+  :root { --field:#9b1b1e; --dark:#1f2a4d; --cream:#efe2c6; --gold:#c9a46a; --accent:#9b1b1e; --accent2:#3d6b6a;
+          --paper:#fbf5e8; --ink:#2a1a14; --muted:#7a6250; --line:#dccaa4;
+          --ok:#dfeccd; --shared:#f8e3a6; --bad:#f2c7bd; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; font-family: Vazirmatn, "Segoe UI", Tahoma, system-ui, sans-serif; color:var(--ink);
+         background-color:var(--field); background-image:var(--pattern); transition:background-color .3s; }
+  header { position:relative; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 18px 26px;
+           background:var(--dark); color:var(--cream); }
+  header::after { content:""; position:absolute; left:0; right:0; bottom:0; height:16px; background-image:var(--strip); background-repeat:repeat-x; }
+  header h1 { margin:0; font-size:22px; display:flex; align-items:center; gap:10px; white-space:nowrap; }
+  header h1 i { display:inline-block; width:34px; height:34px; background:var(--medal) center/contain no-repeat; }
+  .tools { display:flex; gap:6px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .langs button, #themeBtn { background:transparent; color:var(--cream); border:1px solid var(--gold); border-radius:8px; padding:4px 10px; cursor:pointer; font:inherit; font-size:14px; }
+  .langs button.on { background:var(--cream); color:var(--dark); }
+  #themes { position:absolute; top:100%; inset-inline-end:12px; z-index:10; margin-top:4px; background:var(--paper); border:3px solid var(--gold);
+            outline:6px solid var(--dark); border-radius:6px; padding:12px; width:min(340px, 92vw); display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+  #themes button { display:flex; align-items:center; gap:8px; padding:6px; border:2px solid transparent; border-radius:8px; background:none;
+                   cursor:pointer; font:inherit; font-size:14px; color:var(--ink); text-align:start; }
+  #themes button.on { border-color:var(--accent); }
+  #themes b { flex:0 0 34px; height:46px; border-radius:3px; }
+  main { max-width:900px; margin:0 auto; padding:26px 18px; }
+  /* Karte = kleiner Teppich: Doppelrahmen + Eckornamente */
+  .card { position:relative; background-color:var(--paper); background-image:var(--corners); background-repeat:no-repeat;
+          background-position:top left, top right, bottom left, bottom right; background-size:56px 56px;
+          border:3px solid var(--gold); outline:9px solid var(--dark); outline-offset:0; box-shadow:0 0 0 12px var(--gold), 0 10px 30px #0006;
+          border-radius:2px; padding:30px 34px; margin:14px 12px 34px; }
+  h2 { margin:0 0 12px; font-size:19px; color:var(--accent); }
+  label { display:block; font-size:14px; color:var(--muted); margin:10px 0 4px; }
+  input, textarea { width:100%; font:inherit; font-size:16px; padding:10px 12px; border:2px solid var(--line); border-radius:6px; background:#fffdf7; color:var(--ink); }
+  textarea { min-height:80px; resize:vertical; }
+  input:focus, textarea:focus { outline:2px solid var(--accent); border-color:transparent; }
+  input:disabled, textarea:disabled { background:transparent; }
+  button.btn { font:inherit; font-size:16px; padding:10px 18px; border-radius:6px; border:2px solid var(--gold); background:var(--accent); color:var(--cream); cursor:pointer; }
+  button.btn.sec { background:var(--cream); color:var(--dark); }
+  button.btn.danger { background:var(--dark); }
+  button.btn:disabled { opacity:.45; cursor:not-allowed; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .row > * { flex:1; }
+  .players { list-style:none; padding:0; margin:0; }
+  .players li { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dashed var(--line); }
+  .players li:last-child { border:0; }
+  .tag { font-size:12px; background:var(--cream); color:var(--accent); border:1px solid var(--gold); padding:1px 8px; border-radius:20px; margin-inline-start:6px; }
+  .off { opacity:.45; }
+  .code { font-size:28px; letter-spacing:4px; font-weight:bold; direction:ltr; color:var(--dark); }
+  .letter { width:190px; height:190px; margin:0 auto; display:flex; align-items:center; justify-content:center; font-size:76px; font-weight:bold;
+            color:var(--accent); background:var(--medal-big) center/contain no-repeat; line-height:1; padding-bottom:6px; }
+  .timer { text-align:center; font-size:22px; font-variant-numeric:tabular-nums; margin-top:6px; }
+  .timer.low { color:var(--accent); font-weight:bold; }
+  .bar { height:10px; background:var(--cream); border:1px solid var(--gold); border-radius:2px; overflow:hidden; margin:8px 0 16px; }
+  .bar div { height:100%; background:var(--accent); transition:width .25s linear; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+  table { width:100%; border-collapse:collapse; font-size:15px; }
+  th, td { border:1px solid var(--line); padding:8px; text-align:center; }
+  th { background:var(--dark); color:var(--cream); }
+  td.ok { background:var(--ok); } td.shared { background:var(--shared); }
+  td.empty, td.wrongLetter, td.rejected { background:var(--bad); color:#7a1f16; }
+  td.rejected .w, td.wrongLetter .w { text-decoration:line-through; }
+  td.click { cursor:pointer; }
+  td .p { display:block; font-size:12px; color:var(--muted); }
+  .scroll { overflow-x:auto; }
+  .muted { color:var(--muted); font-size:14px; }
+  .legend span { display:inline-block; padding:2px 8px; border-radius:4px; margin:2px; font-size:13px; border:1px solid var(--line); }
+  #offline { position:sticky; top:0; z-index:15; background:var(--cream); color:var(--dark); border-bottom:3px solid var(--gold); text-align:center; padding:8px; font-size:15px; }
+  .hidden { display:none !important; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--dark); color:var(--cream); border:2px solid var(--gold); padding:10px 18px; border-radius:8px; z-index:20; }
+  @media (max-width:520px) { .card { padding:24px 18px; margin:14px 10px 30px; } header h1 { font-size:18px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1><i></i><span data-t="title"></span></h1>
+  <div class="tools">
+    <button id="themeBtn">🎨 <span data-t="design"></span></button>
+    <div class="langs">
+      <button data-lang="fa">فا</button><button data-lang="de">DE</button><button data-lang="en">EN</button>
+    </div>
+  </div>
+  <div id="themes" class="hidden"></div>
+</header>
+
+<div id="offline" class="hidden" data-t="offline"></div>
+<main>
+  <!-- Start -->
+  <section id="home" class="card">
+    <h2 data-t="welcome"></h2>
+    <label data-t="yourName"></label>
+    <input id="name" maxlength="20">
+    <div id="joinBox" class="hidden">
+      <p><span data-t="joiningRoom"></span> <b id="joinCode" class="code" style="font-size:18px"></b></p>
+      <button class="btn" id="joinBtn" data-t="join"></button>
+    </div>
+    <div id="createBox">
+      <div id="pwBox" class="hidden">
+        <label data-t="adminPw"></label>
+        <input id="pw" type="password" autocomplete="current-password">
+      </div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="createBtn" data-t="create"></button>
+      </div>
+      <label data-t="orCode"></label>
+      <div class="row">
+        <input id="codeInput" maxlength="5" style="direction:ltr;text-transform:uppercase">
+        <button class="btn sec" id="joinCodeBtn" data-t="join" style="flex:0 0 auto"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lobby -->
+  <section id="lobby" class="hidden">
+    <div class="card">
+      <div class="row">
+        <div><div class="muted" data-t="roomCode"></div><div class="code" id="roomCode"></div></div>
+        <button class="btn sec" id="copyBtn" data-t="copyLink" style="flex:0 0 auto"></button>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span data-t="players"></span> <span id="roundInfo" class="muted"></span></h2>
+      <ul class="players" id="playerList"></ul>
+    </div>
+    <div class="card">
+      <h2 data-t="settings"></h2>
+      <label data-t="time"></label>
+      <input id="sTime" type="number" min="10" max="600" step="5">
+      <label data-t="categories"></label>
+      <textarea id="sCats"></textarea>
+      <label data-t="letters"></label>
+      <input id="sLetters">
+      <p class="muted" id="hostHint"></p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="startBtn" data-t="start"></button>
+        <button class="btn sec" id="resetBtn" data-t="reset" style="flex:0 0 auto"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Spiel -->
+  <section id="game" class="hidden">
+    <div class="card">
+      <div class="letter" id="letter"></div>
+      <div class="timer" id="timer"></div>
+      <div class="bar"><div id="barFill"></div></div>
+      <div class="grid" id="fields"></div>
+      <div class="row" style="margin-top:16px">
+        <button class="btn danger" id="stopBtn" data-t="stop"></button>
+        <button class="btn sec abortBtn" data-t="abort" style="flex:0 0 auto"></button>
+      </div>
+      <p class="muted" id="progress"></p>
+    </div>
+  </section>
+
+  <!-- Auswertung -->
+  <section id="review" class="hidden">
+    <div class="card">
+      <h2><span data-t="results"></span> – <span id="revLetter"></span></h2>
+      <p class="muted" id="stoppedInfo"></p>
+      <div class="legend">
+        <span style="background:var(--ok)" data-t="lgUnique"></span>
+        <span style="background:var(--shared)" data-t="lgShared"></span>
+        <span style="background:var(--bad)" data-t="lgBad"></span>
+      </div>
+      <p class="muted" id="reviewHint"></p>
+      <div class="scroll"><table id="revTable"></table></div>
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="confirmBtn" data-t="confirm"></button>
+        <button class="btn sec abortBtn" data-t="abortReview" style="flex:0 0 auto"></button>
+      </div>
+    </div>
+  </section>
+
+  <section id="waiting" class="card hidden"><p data-t="collecting"></p></section>
+  <section id="lateWait" class="card hidden">
+    <h2 data-t="lateTitle"></h2>
+    <p data-t="lateText"></p>
+    <p class="muted" id="lateInfo"></p>
+  </section>
+  <div id="leaveBox" class="hidden" style="text-align:center;margin:-10px 0 20px">
+    <button class="btn sec" id="leaveBtn" data-t="leave"></button>
+  </div>
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const T = {
+  fa: { title:"اسم فامیل", welcome:"به اسم فامیل آنلاین خوش اومدی!", yourName:"اسمت", create:"ساختن اتاق جدید",
+        orCode:"یا کد اتاق رو وارد کن:", join:"ورود", joiningRoom:"ورود به اتاق", roomCode:"کد اتاق", copyLink:"کپی لینک",
+        players:"بازیکن‌ها", settings:"تنظیمات", time:"زمان هر دور (ثانیه)", categories:"دسته‌ها (هر خط یا با ویرگول)",
+        letters:"حروف (با فاصله)", start:"شروع دور", reset:"صفر کردن امتیازها", stop:"تموم! ✋", results:"نتایج",
+        lgUnique:"تکی: ۱۰", lgShared:"تکراری: ۵", lgBad:"غلط / خالی: ۰", confirm:"تأیید و دور بعد",
+        collecting:"در حال جمع‌کردن جواب‌ها…", host:"میزبان", you:"تو", round:"دور", points:"امتیاز", total:"این دور",
+        hostOnly:"فقط میزبان می‌تونه تنظیمات رو عوض کنه.", hostCan:"تو میزبانی: تنظیمات رو عوض کن و بازی رو شروع کن.",
+        reviewHost:"روی هر جواب بزن تا درست/غلط بشه.", reviewGuest:"میزبان جواب‌ها رو بررسی می‌کنه…",
+        stoppedBy:"{n} زد تموم!", timeUp:"وقت تموم شد!", filled:"{n}: {a}/{b}", copied:"لینک کپی شد!",
+        noRoom:"این اتاق پیدا نشد.", full:"اتاق پره.", needName:"اول اسمت رو بنویس.", kick:"حذف", stopHint:"وقتی همه خونه‌ها رو پر کنی، می‌تونی «تموم» رو بزنی.", sec:"ثانیه", offline:"اتصال قطع شد… در حال وصل شدن دوباره ⏳", abort:"لغو این دور", abortReview:"بدون امتیاز، برگرد به لابی", leave:"خروج از اتاق 🚪", leaveConfirm:"مطمئنی می‌خوای از اتاق خارج بشی؟ امتیازهات پاک می‌شه.", abortConfirm:"این دور لغو بشه و همه برگردن به لابی؟", lateTitle:"دور در حال اجراست ⏳", lateText:"تو از دور بعد بازی می‌کنی. منتظر بمون تا این دور تموم بشه.", aborted:"دور لغو شد.", design:"طرح", adminPw:"رمز مدیر (برای ساختن اتاق)", wrongPassword:"رمز اشتباهه.", makeHost:"میزبان کن" },
+  de: { title:"Esm Famil", welcome:"Willkommen bei Stadt, Land, Fluss online!", yourName:"Dein Name", create:"Neuen Raum erstellen",
+        orCode:"Oder Raum-Code eingeben:", join:"Beitreten", joiningRoom:"Beitreten zu Raum", roomCode:"Raum-Code", copyLink:"Link kopieren",
+        players:"Spieler", settings:"Einstellungen", time:"Zeit pro Runde (Sekunden)", categories:"Kategorien (je Zeile oder mit Komma)",
+        letters:"Buchstaben (mit Leerzeichen)", start:"Runde starten", reset:"Punkte zurücksetzen", stop:"Stopp! ✋", results:"Ergebnis",
+        lgUnique:"Einzeln: 10", lgShared:"Doppelt: 5", lgBad:"Falsch / leer: 0", confirm:"Bestätigen & weiter",
+        collecting:"Antworten werden eingesammelt…", host:"Gastgeber", you:"du", round:"Runde", points:"Punkte", total:"Diese Runde",
+        hostOnly:"Nur der Gastgeber kann die Einstellungen ändern.", hostCan:"Du bist Gastgeber: Stell alles ein und starte die Runde.",
+        reviewHost:"Tippe auf eine Antwort, um sie gültig/ungültig zu machen.", reviewGuest:"Der Gastgeber prüft die Antworten…",
+        stoppedBy:"{n} hat Stopp gerufen!", timeUp:"Zeit ist um!", filled:"{n}: {a}/{b}", copied:"Link kopiert!",
+        noRoom:"Raum nicht gefunden.", full:"Raum ist voll.", needName:"Bitte zuerst deinen Namen eingeben.", kick:"Entfernen", stopHint:"Wenn alle Felder ausgefüllt sind, kannst du „Stopp“ drücken.", sec:"Sek.", offline:"Verbindung getrennt… verbinde neu ⏳", abort:"Runde abbrechen", abortReview:"Ohne Punkte zurück zur Lobby", leave:"Raum verlassen 🚪", leaveConfirm:"Willst du den Raum wirklich verlassen? Deine Punkte gehen verloren.", abortConfirm:"Diese Runde abbrechen und alle zurück in die Lobby schicken?", lateTitle:"Runde läuft gerade ⏳", lateText:"Du spielst ab der nächsten Runde mit. Warte kurz, bis diese Runde vorbei ist.", aborted:"Runde abgebrochen.", design:"Design", adminPw:"Admin-Passwort (zum Raum erstellen)", wrongPassword:"Falsches Passwort.", makeHost:"Zum Gastgeber" },
+  en: { title:"Esm Famil", welcome:"Welcome to Esm Famil online!", yourName:"Your name", create:"Create new room",
+        orCode:"Or enter a room code:", join:"Join", joiningRoom:"Joining room", roomCode:"Room code", copyLink:"Copy link",
+        players:"Players", settings:"Settings", time:"Time per round (seconds)", categories:"Categories (one per line or comma-separated)",
+        letters:"Letters (space-separated)", start:"Start round", reset:"Reset scores", stop:"Stop! ✋", results:"Results",
+        lgUnique:"Unique: 10", lgShared:"Shared: 5", lgBad:"Wrong / empty: 0", confirm:"Confirm & continue",
+        collecting:"Collecting answers…", host:"host", you:"you", round:"Round", points:"Points", total:"This round",
+        hostOnly:"Only the host can change the settings.", hostCan:"You're the host: adjust the settings and start the round.",
+        reviewHost:"Tap an answer to mark it valid/invalid.", reviewGuest:"The host is reviewing the answers…",
+        stoppedBy:"{n} called stop!", timeUp:"Time's up!", filled:"{n}: {a}/{b}", copied:"Link copied!",
+        noRoom:"Room not found.", full:"Room is full.", needName:"Please enter your name first.", kick:"Remove", stopHint:"Once every field is filled, you can press Stop.", sec:"sec", offline:"Connection lost… reconnecting ⏳", abort:"Cancel round", abortReview:"Back to lobby without points", leave:"Leave room 🚪", leaveConfirm:"Do you really want to leave the room? Your points will be lost.", abortConfirm:"Cancel this round and send everyone back to the lobby?", lateTitle:"A round is in progress ⏳", lateText:"You'll join from the next round. Please wait until this round is over.", aborted:"Round cancelled.", design:"Design", adminPw:"Admin password (to create a room)", wrongPassword:"Wrong password.", makeHost:"Make host" },
+};
+
+let lang = localStorage.getItem("ef_lang") || "fa";
+let playerId = localStorage.getItem("ef_pid");
+if (!playerId || playerId.length < 30) { playerId = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36)); localStorage.setItem("ef_pid", playerId); }
+const $ = (id) => document.getElementById(id);
+const t = (k, vars = {}) => (T[lang][k] || k).replace(/\{(\w+)\}/g, (_, v) => vars[v]);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+
+let myId = null, myToken = null, state = null, roomId = null, endAt = 0, myAnswers = {}, tick = null, lastRoundKey = null;
+const socket = io();
+
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "fa" ? "rtl" : "ltr";
+  document.querySelectorAll("[data-t]").forEach((el) => (el.textContent = t(el.dataset.t)));
+  document.querySelectorAll(".langs button").forEach((b) => b.classList.toggle("on", b.dataset.lang === lang));
+  renderThemeMenu();
+  if (state) render();
+}
+document.querySelectorAll(".langs button").forEach((b) => b.onclick = () => { lang = b.dataset.lang; localStorage.setItem("ef_lang", lang); applyLang(); });
+
+function toast(msg) {
+  const d = document.createElement("div"); d.className = "toast"; d.textContent = msg;
+  document.body.appendChild(d); setTimeout(() => d.remove(), 2200);
+}
+function show(id) {
+  ["home", "lobby", "game", "review", "waiting", "lateWait"].forEach((s) => $(s).classList.toggle("hidden", s !== id));
+  $("leaveBox").classList.toggle("hidden", id === "home");
+}
+
+// ---------- Start ----------
+$("name").value = localStorage.getItem("ef_name") || "";
+const urlRoom = new URLSearchParams(location.search).get("room");
+if (urlRoom) { $("joinBox").classList.remove("hidden"); $("createBox").classList.add("hidden"); $("joinCode").textContent = urlRoom.toUpperCase(); }
+
+function myName() {
+  const n = $("name").value.trim();
+  if (!n) { toast(t("needName")); $("name").focus(); return null; }
+  localStorage.setItem("ef_name", n); return n;
+}
+function enter(res) {
+  if (!res.ok) return toast(t(res.error));
+  roomId = res.roomId; myId = res.you; myToken = res.token || myToken; if (state) render();
+  history.replaceState(null, "", "?room=" + roomId);
+  localStorage.setItem("ef_room", roomId);
+}
+$("createBtn").onclick = () => { const n = myName(); if (n) socket.emit("create", { name: n, playerId, lang, password: $("pw").value }, enter); };
+$("joinBtn").onclick = () => { const n = myName(); if (n) socket.emit("join", { roomId: urlRoom, name: n, playerId }, enter); };
+$("joinCodeBtn").onclick = () => { const n = myName(); if (n) socket.emit("join", { roomId: $("codeInput").value.trim(), name: n, playerId }, enter); };
+
+// Nach Verbindungsabbruch automatisch zurück in den Raum
+// Daten, mit denen der Raum nach einem Server-Neustart wiederhergestellt wird
+function recoverData() {
+  if (!myId || !myToken) return null;
+  return { myId, token: myToken, round: state?.round, settings: state?.settings,
+           players: (state?.players || []).map((p) => ({ id: p.id, name: p.name, score: p.score })) };
+}
+function rejoin() {
+  const n = localStorage.getItem("ef_name");
+  if (!roomId || !n) return;
+  socket.emit("join", { roomId, name: n, playerId, recover: recoverData() }, (r) => {
+    if (!r.ok) { roomId = null; show("home"); return; }
+    myId = r.you; myToken = r.token || myToken; if (state) render();
+  });
+}
+socket.on("roomLost", rejoin);
+socket.on("disconnect", () => $("offline").classList.remove("hidden"));
+socket.on("connect", () => {
+  $("offline").classList.add("hidden");
+  const n = localStorage.getItem("ef_name");
+  if (roomId && n) rejoin();
+  else if (urlRoom && n && localStorage.getItem("ef_room") === urlRoom.toUpperCase())
+    socket.emit("join", { roomId: urlRoom, name: n, playerId }, enter);
+});
+
+// ---------- Lobby ----------
+$("copyBtn").onclick = () => {
+  const link = location.origin + location.pathname + "?room=" + roomId;
+  navigator.clipboard?.writeText(link).then(() => toast(t("copied")), () => prompt("", link));
+};
+let settingsTimer;
+function sendSettings() {
+  clearTimeout(settingsTimer);
+  settingsTimer = setTimeout(() => socket.emit("settings", { time: $("sTime").value, categories: $("sCats").value, letters: $("sLetters").value }), 400);
+}
+["sTime", "sCats", "sLetters"].forEach((id) => $(id).addEventListener("input", sendSettings));
+$("startBtn").onclick = () => { clearTimeout(settingsTimer);
+  socket.emit("settings", { time: $("sTime").value, categories: $("sCats").value, letters: $("sLetters").value });
+  socket.emit("start"); };
+$("resetBtn").onclick = () => socket.emit("resetScores");
+
+// ---------- Spiel ----------
+let ansTimer;
+function sendAnswers(now) {
+  clearTimeout(ansTimer);
+  if (now) socket.emit("answers", myAnswers);
+  else ansTimer = setTimeout(() => socket.emit("answers", myAnswers), 250);
+}
+socket.on("flush", () => sendAnswers(true));
+socket.on("restore", (a) => { myAnswers = a; document.querySelectorAll("#fields input").forEach((inp) => inp.value = a[inp.dataset.i] || ""); });
+$("stopBtn").onclick = () => { sendAnswers(true); socket.emit("stop"); };
+$("confirmBtn").onclick = () => socket.emit("confirm");
+document.querySelectorAll(".abortBtn").forEach((b) => b.onclick = () => { if (confirm(t("abortConfirm"))) socket.emit("abort"); });
+$("leaveBtn").onclick = () => {
+  if (!confirm(t("leaveConfirm"))) return;
+  socket.emit("leave", null, () => {
+    roomId = null; myId = null; myToken = null; state = null; lastRoundKey = null; clearInterval(tick);
+    localStorage.removeItem("ef_room");
+    history.replaceState(null, "", location.pathname);
+    $("joinBox").classList.add("hidden"); $("createBox").classList.remove("hidden");
+    show("home");
+  });
+};
+socket.on("kicked", (pid) => { if (pid === myId) { roomId = null; localStorage.removeItem("ef_room"); history.replaceState(null, "", location.pathname); location.reload(); } });
+
+function updateStopBtn() {
+  const cats = state.settings.categories;
+  const all = cats.every((_, i) => String(myAnswers[i] || "").trim());
+  $("stopBtn").disabled = !all;
+  $("stopBtn").title = t("stopHint");
+}
+
+function runTimer() {
+  clearInterval(tick);
+  const total = state.settings.time * 1000;
+  const upd = () => {
+    const left = Math.max(0, endAt - Date.now());
+    $("timer").textContent = Math.ceil(left / 1000) + " " + t("sec");
+    $("timer").classList.toggle("low", left < 10000);
+    $("barFill").style.width = (100 * left / total) + "%";
+    if (!left) clearInterval(tick);
+  };
+  upd(); tick = setInterval(upd, 250);
+}
+
+// ---------- Rendern ----------
+socket.on("state", (s) => { state = s; render(); });
+
+function render() {
+  const s = state; if (!s) return;
+  const isHost = !!myId && s.hostId === myId;
+  document.querySelectorAll(".abortBtn").forEach((b) => b.classList.toggle("hidden", !isHost));
+
+  // Mitten in einer Runde dazugekommen → warten bis zur nächsten Runde
+  if (["playing", "collecting", "review"].includes(s.phase) && myId && !(s.roundPlayers || []).includes(myId)) {
+    show("lateWait"); clearInterval(tick);
+    $("lateInfo").textContent = s.phase === "playing" ? t("round") + " " + s.round + " · " + s.letter : "";
+    return;
+  }
+
+  if (s.phase === "lobby") {
+    show("lobby"); lastRoundKey = null; clearInterval(tick);
+    $("roomCode").textContent = s.roomId;
+    $("roundInfo").textContent = s.round ? "· " + t("round") + " " + s.round : "";
+    const sorted = [...s.players].sort((a, b) => b.score - a.score);
+    $("playerList").innerHTML = sorted.map((p) =>
+      `<li class="${p.online ? "" : "off"}"><span>${esc(p.name)}${p.isHost ? `<span class="tag">${t("host")}</span>` : ""}${p.id === myId ? `<span class="tag">${t("you")}</span>` : ""}</span>
+       <span><b>${p.score}</b> ${t("points")} ${isHost && !p.isHost ? `${p.online ? `<button class="btn sec" style="padding:2px 8px;font-size:12px" data-host="${esc(p.id)}">${t("makeHost")}</button> ` : ""}<button class="btn sec" style="padding:2px 8px;font-size:12px" data-kick="${esc(p.id)}">${t("kick")}</button>` : ""}</span></li>`).join("");
+    $("playerList").querySelectorAll("[data-kick]").forEach((b) => b.onclick = () => socket.emit("kick", b.dataset.kick));
+    $("playerList").querySelectorAll("[data-host]").forEach((b) => b.onclick = () => socket.emit("makeHost", b.dataset.host));
+    // Einstellungen nur überschreiben, wenn man nicht gerade selbst tippt
+    const active = document.activeElement;
+    if (active !== $("sTime")) $("sTime").value = s.settings.time;
+    if (active !== $("sCats")) $("sCats").value = s.settings.categories.join("\n");
+    if (active !== $("sLetters")) $("sLetters").value = s.settings.letters;
+    ["sTime", "sCats", "sLetters"].forEach((id) => $(id).disabled = !isHost);
+    $("startBtn").classList.toggle("hidden", !isHost);
+    $("resetBtn").classList.toggle("hidden", !isHost);
+    $("hostHint").textContent = isHost ? t("hostCan") : t("hostOnly");
+  }
+
+  else if (s.phase === "playing") {
+    show("game");
+    const roundKey = s.roomId + ":" + s.round;
+    if (roundKey !== lastRoundKey) {          // neue Runde → Felder neu aufbauen
+      lastRoundKey = roundKey; myAnswers = {};
+      $("fields").innerHTML = s.settings.categories.map((c, i) =>
+        `<div><label>${esc(c)}</label><input data-i="${i}" maxlength="40" autocomplete="off"></div>`).join("");
+      $("fields").querySelectorAll("input").forEach((inp) => inp.oninput = () => {
+        myAnswers[inp.dataset.i] = inp.value; sendAnswers(); updateStopBtn(); });
+      endAt = Date.now() + s.remainingMs;
+      runTimer();
+      setTimeout(() => $("fields").querySelector("input")?.focus(), 50);
+    }
+    $("letter").textContent = s.letter;
+    const n = s.settings.categories.length;
+    $("progress").textContent = s.players.filter((p) => p.filled !== undefined && p.online)
+      .map((p) => t("filled", { n: p.name, a: p.filled, b: n })).join(" · ");
+    updateStopBtn();
+  }
+
+  else if (s.phase === "collecting") { show("waiting"); clearInterval(tick); }
+
+  else if (s.phase === "review") {
+    show("review"); clearInterval(tick);
+    const r = s.review;
+    $("revLetter").textContent = s.letter;
+    $("stoppedInfo").textContent = s.stoppedBy ? t("stoppedBy", { n: s.stoppedBy }) : t("timeUp");
+    $("reviewHint").textContent = isHost ? t("reviewHost") : t("reviewGuest");
+    const name = (pid) => esc(s.players.find((p) => p.id === pid)?.name || "?");
+    let html = "<tr><th></th>" + r.players.map((pid) => `<th>${name(pid)}</th>`).join("") + "</tr>";
+    r.categories.forEach((c, ci) => {
+      html += `<tr><th>${esc(c)}</th>` + r.players.map((pid) => {
+        const cell = r.cells[pid][ci];
+        const clickable = isHost && cell.status !== "empty";
+        return `<td class="${cell.status} ${clickable ? "click" : ""}" data-pid="${esc(pid)}" data-ci="${ci}">
+                 <span class="w">${esc(cell.word) || "—"}</span><span class="p">${cell.points}</span></td>`;
+      }).join("") + "</tr>";
+    });
+    html += `<tr><th>${t("total")}</th>` + r.players.map((pid) => `<th>${r.roundPoints[pid]}</th>`).join("") + "</tr>";
+    $("revTable").innerHTML = html;
+    if (isHost) $("revTable").querySelectorAll("td.click").forEach((td) =>
+      td.onclick = () => socket.emit("toggle", { pid: td.dataset.pid, ci: +td.dataset.ci }));
+    $("confirmBtn").classList.toggle("hidden", !isHost);
+  }
+}
+
+// ================= Teppich-Designs =================
+// field = Grundfarbe, dark = dunkle Bordüre, cream = helle Bordüre, gold = Linien, accent = Knöpfe, accent2 = Zweitfarbe
+const THEMES = [
+  { id:"kashan",  name:{fa:"کاشان", de:"Kaschan", en:"Kashan"},       field:"#5c0b16", dark:"#1a1012", cream:"#ead8b2", gold:"#c4a06a", accent:"#7a1424", accent2:"#2b2a26", paper:"#fbf3e2" },
+  { id:"tabriz",  name:{fa:"تبریز", de:"Täbris", en:"Tabriz"},        field:"#9a1b1f", dark:"#1f2a4d", cream:"#efe2c6", gold:"#d1b47c", accent:"#9a1b1f", accent2:"#6f9c86", paper:"#fbf4e6" },
+  { id:"mashhad", name:{fa:"مشهد", de:"Maschhad", en:"Mashhad"},      field:"#a01d20", dark:"#2c2f4a", cream:"#ecdcb8", gold:"#b9a06a", accent:"#a01d20", accent2:"#5f6e45", paper:"#fbf5e7" },
+  { id:"isfahan", name:{fa:"اصفهان", de:"Isfahan", en:"Isfahan"},     field:"#a3191c", dark:"#22284a", cream:"#eddcb6", gold:"#cfae74", accent:"#a3191c", accent2:"#3d6b6a", paper:"#fbf4e4" },
+  { id:"heriz",   name:{fa:"هریس", de:"Heris", en:"Heriz"},           field:"#0e0c16", dark:"#c8161d", cream:"#f1e6cc", gold:"#2445b8", accent:"#c8161d", accent2:"#f0a020", paper:"#fbf5e6" },
+  { id:"qom",     name:{fa:"قم", de:"Ghom", en:"Qom"},                 field:"#7a1e26", dark:"#1d2240", cream:"#e6c27a", gold:"#e1b974", accent:"#3f7a6e", accent2:"#c8664a", paper:"#fcf3df" },
+  { id:"termeh",  name:{fa:"ترمه (بته‌جقه)", de:"Termeh (Boteh)", en:"Termeh (Paisley)"}, field:"#140d16", dark:"#5a2a14", cream:"#f4d35e", gold:"#e2b23a", accent:"#c9302a", accent2:"#3b6fc4", paper:"#fdf6e3" },
+  { id:"shiraz",  name:{fa:"شیراز", de:"Schiras", en:"Shiraz"},       field:"#c22a1c", dark:"#1a1414", cream:"#efe6cf", gold:"#a8a76a", accent:"#c22a1c", accent2:"#5e6b3a", paper:"#fbf5e8" },
+];
+
+const svgUrl = (s) => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+const svg = (w, h, body) => `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${body}</svg>`;
+
+// Blüte mit n Blättern
+function rosette(cx, cy, r, n, fill, inner) {
+  let p = "";
+  for (let i = 0; i < n; i++) {
+    const a = (360 / n) * i;
+    p += `<ellipse cx="${cx}" cy="${cy - r * 0.55}" rx="${r * 0.22}" ry="${r * 0.5}" fill="${fill}" transform="rotate(${a} ${cx} ${cy})"/>`;
+  }
+  return p + `<circle cx="${cx}" cy="${cy}" r="${r * 0.22}" fill="${inner}"/>`;
+}
+// Stern-Medaillon (Lappenform)
+function starPath(cx, cy, ro, ri, n) {
+  let d = "";
+  for (let i = 0; i < n * 2; i++) {
+    const r = i % 2 ? ri : ro, a = (Math.PI / n) * i - Math.PI / 2;
+    d += (i ? "L" : "M") + (cx + r * Math.cos(a)).toFixed(1) + " " + (cy + r * Math.sin(a)).toFixed(1);
+  }
+  return d + "Z";
+}
+
+function buildOrnaments(t) {
+  // Feld-Muster: kleine Blüten und Rauten, wie das Innenfeld eines Teppichs
+  const pattern = svg(90, 90,
+    `<g opacity=".22">${rosette(45, 45, 13, 8, t.gold, t.cream)}</g>` +
+    `<g opacity=".16"><path d="M0 -7 L7 0 L0 7 L-7 0Z" fill="${t.cream}" transform="translate(0 0)"/><path d="M0 -7 L7 0 L0 7 L-7 0Z" fill="${t.cream}" transform="translate(90 0)"/>` +
+    `<path d="M0 -7 L7 0 L0 7 L-7 0Z" fill="${t.cream}" transform="translate(0 90)"/><path d="M0 -7 L7 0 L0 7 L-7 0Z" fill="${t.cream}" transform="translate(90 90)"/></g>` +
+    `<g opacity=".12" stroke="${t.gold}" stroke-width="1.5" fill="none"><path d="M45 18 C 30 10, 20 25, 8 18"/><path d="M45 72 C 60 80, 70 65, 82 72"/></g>`);
+  // Bordüre: Rauten + Punkte zwischen zwei Linien
+  const strip = svg(40, 16,
+    `<rect width="40" height="16" fill="${t.dark}"/><rect y="0" width="40" height="2" fill="${t.gold}"/><rect y="14" width="40" height="2" fill="${t.gold}"/>` +
+    `<path d="M20 3 L27 8 L20 13 L13 8Z" fill="${t.cream}"/><circle cx="20" cy="8" r="2" fill="${t.accent}"/>` +
+    `<circle cx="3" cy="8" r="2" fill="${t.gold}"/><circle cx="37" cy="8" r="2" fill="${t.gold}"/>`);
+  // Eckornament (Spandrel) für Karten
+  const corner = (rot) => svgUrl(svg(56, 56,
+    `<g transform="rotate(${rot} 28 28)"><path d="M0 0 H50 Q30 8 22 22 Q8 30 0 50Z" fill="${t.dark}" opacity=".9"/>` +
+    `<path d="M0 0 H38 Q24 6 18 18 Q6 24 0 38Z" fill="${t.cream}"/>` + rosette(11, 11, 12, 6, t.accent, t.gold) + `</g>`));
+  // Medaillon (für Titel und Buchstaben)
+  const medal = (bg) => svg(200, 200,
+    `<path d="${starPath(100, 100, 98, 84, 16)}" fill="${t.dark}"/>` +
+    `<circle cx="100" cy="100" r="80" fill="${t.gold}"/><circle cx="100" cy="100" r="76" fill="${t.cream}"/>` +
+    `<g opacity=".35">${rosette(100, 100, 72, 12, t.gold, t.cream)}</g>` +
+    `<circle cx="100" cy="100" r="54" fill="${bg}" stroke="${t.gold}" stroke-width="3"/>`);
+  return {
+    "--pattern": svgUrl(pattern),
+    "--strip": svgUrl(strip),
+    "--corners": [corner(0), corner(90), corner(-90), corner(180)].join(","),
+    "--medal": svgUrl(medal(t.accent)),
+    "--medal-big": svgUrl(medal(t.paper)),
+  };
+}
+
+let themeId = localStorage.getItem("ef_theme") || "tabriz";
+function applyTheme(id) {
+  const t = THEMES.find((x) => x.id === id) || THEMES[1];
+  themeId = t.id; localStorage.setItem("ef_theme", t.id);
+  const r = document.documentElement.style;
+  ["field", "dark", "cream", "gold", "accent", "accent2", "paper"].forEach((k) => r.setProperty("--" + k, t[k]));
+  r.setProperty("--line", t.gold + "88");
+  Object.entries(buildOrnaments(t)).forEach(([k, v]) => r.setProperty(k, v));
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", t.dark);
+  renderThemeMenu();
+}
+function renderThemeMenu() {
+  $("themes").innerHTML = THEMES.map((t) =>
+    `<button data-theme="${t.id}" class="${t.id === themeId ? "on" : ""}">
+       <b style="background:linear-gradient(${t.dark},${t.dark}) 0 0/100% 5px no-repeat, linear-gradient(${t.dark},${t.dark}) 0 100%/100% 5px no-repeat,
+                 radial-gradient(circle, ${t.cream} 0 5px, ${t.accent} 6px 8px, transparent 9px), ${t.field}; outline:3px solid ${t.cream}; outline-offset:-8px"></b>
+       ${t.name[lang]}</button>`).join("");
+  $("themes").querySelectorAll("button").forEach((b) => b.onclick = () => { applyTheme(b.dataset.theme); $("themes").classList.add("hidden"); });
+}
+$("themeBtn").onclick = (e) => { e.stopPropagation(); $("themes").classList.toggle("hidden"); };
+document.addEventListener("click", (e) => { if (!$("themes").contains(e.target)) $("themes").classList.add("hidden"); });
+applyTheme(themeId);
+
+fetch("/config").then((r) => r.json()).then((c) => $("pwBox").classList.toggle("hidden", !c.needPassword)).catch(() => {});
+applyLang();
+</script>
+</body>
+</html>
